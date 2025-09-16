@@ -1,79 +1,56 @@
-import logging
-import requests
+import os
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import Application, CommandHandler, ContextTypes
 
-# ==============================
-# 🔹 Insert your Bot Token here
-# ==============================
-BOT_TOKEN = "8203477255:AAHgniik-6DWIcdsBoa0D1xh5yC41MLksMo"
+# Get the bot token from environment variables
+TOKEN = os.getenv("BOT_TOKEN")
 
-# ==============================
-# 🔹 Enable Logging
-# ==============================
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
-logger = logging.getLogger(__name__)
-
-# ==============================
-# 🔹 Commands
-# ==============================
+# Command: /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "🚀 Welcome to *ZyraXis*, your futuristic crypto companion!\n\n"
-        "Type /price <symbol> to get live prices.\n"
-        "Example: `/price BTC`"
+        "🚀 Welcome to *ZyraXis*! \n\n"
+        "Your futuristic crypto companion.\n\n"
+        "Type /help to see what I can do."
     )
 
+# Command: /help
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "🤖 Available Commands:\n"
-        "/start - Welcome message\n"
-        "/help - Show this menu\n"
-        "/price <symbol> - Get crypto price\n"
-        "/about - Info about ZyraXis"
+        "🤖 *ZyraXis Commands:*\n\n"
+        "/start - Begin your journey\n"
+        "/help - Show this help message\n"
+        "/crypto - Get the latest crypto update\n"
+        "/about - Learn more about ZyraXis"
     )
 
+# Command: /crypto (placeholder for now)
+async def crypto(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "📊 Crypto updates coming soon! Stay tuned..."
+    )
+
+# Command: /about
 async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "✨ *ZyraXis* is a futuristic Telegram bot built for crypto lovers.\n"
-        "Stay updated with real-time market data 📊."
+        "✨ *ZyraXis* is your futuristic AI crypto companion.\n"
+        "She evolves with you — powerful, insightful, and always learning."
     )
 
-# ==============================
-# 🔹 Crypto Price Function
-# ==============================
-async def price(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not context.args:
-        await update.message.reply_text("⚠️ Usage: /price BTC")
-        return
-
-    symbol = context.args[0].upper()
-    url = f"https://api.coingecko.com/api/v3/simple/price?ids={symbol.lower()}&vs_currencies=usd"
-
-    try:
-        response = requests.get(url).json()
-        if symbol.lower() in response:
-            usd_price = response[symbol.lower()]["usd"]
-            await update.message.reply_text(f"💰 {symbol} Price: *${usd_price}*")
-        else:
-            await update.message.reply_text("❌ Symbol not found. Try again.")
-    except Exception as e:
-        await update.message.reply_text("⚠️ Error fetching data. Please try later.")
-        logger.error(f"Price fetch error: {e}")
-
-# ==============================
-# 🔹 Main Function
-# ==============================
+# Main function
 def main():
-    app = Application.builder().token(BOT_TOKEN).build()
+    # Make sure the token exists
+    if not TOKEN:
+        raise ValueError("No BOT_TOKEN found! Set it in your environment variables.")
 
+    app = Application.builder().token(TOKEN).build()
+
+    # Register commands
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CommandHandler("crypto", crypto))
     app.add_handler(CommandHandler("about", about))
-    app.add_handler(CommandHandler("price", price))
 
+    # Run bot
     app.run_polling()
 
 if __name__ == "__main__":
