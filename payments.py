@@ -1,61 +1,54 @@
 ```python
 import os
-import requests
-from telegram import LabeledPrice
+from telegram import Update, LabeledPrice
+from telegram.ext import CallbackContext, CommandHandler, PreCheckoutQueryHandler, MessageHandler, filters
 
---- Telegram Payments ---
-def get_subscription_invoice(chat_id):
+Command to start premium subscription purchase
+async def start_premium(update: Update, context: CallbackContext):
+    chat_id = update.effective_chat.id
     title = "ZyraXis Premium Subscription"
     description = "Monthly access to premium features"
     payload = "premium-subscription"
     currency = "USD"
-    prices = [LabeledPrice("Monthly Plan", 30000)]  # 300.00 USD cents = $300
+    prices = [LabeledPrice("Monthly Plan", 30000)]  # $300.00 in cents
+
     provider_token = os.getenv("TELEGRAM_PROVIDER_TOKEN")
+    if not provider_token:
+        await update.message.reply_text("Payment provider token not set.")
+        return
 
-    return {
-        "chat_id": chat_id,
-        "title": title,
-        "description": description,
-        "payload": payload,
-        "provider_token": provider_token,
-        "start_parameter": "subscribe",
-        "currency": currency,
-        "prices": prices,
-    }
-
---- Flutterwave Integration ---
-FLUTTERWAVE_SECRET_KEY = os.getenv("FLUTTERWAVE_SECRET_KEY")
-FLUTTERWAVE_BASE_URL = "https://api.flutterwave.com/v3"
-
-def create_flutterwave_payment(email, amount, tx_ref, redirect_url):
-    headers = {
-        "Authorization": f"Bearer {FLUTTERWAVE_SECRET_KEY}",
-        "Content-Type": "application/json"
-    }
-
-    data = {
-        "tx_ref": tx_ref,
-        "amount": amount,
-        "currency": "USD",
-        "redirect_url": redirect_url,
-[9/21, 14:43] ChatGPT: "payment_options": "card",
-        "customer": {
-            "email": email
-        },
-        "customizations": {
-            "title": "ZyraXis Premium",
-            "description": "Monthly Premium Subscription"
-        }
-    }
-
-    response = requests.post(
-        f"{FLUTTERWAVE_BASE_URL}/payments",
-        headers=headers,
-        json=data
+    await context.bot.send_invoice(
+        chat_id=chat_id,
+        title=title,
+        description=description,
+        payload=payload,
+        provider_token=provider_token,
+        start_parameter="subscribe",
+        currency=currency,
+        prices=prices,
+        need_name=True,
+        need_email=True
     )
-    
-    if response.status_code == 200:
-        return response.json()
-    else:
-        return None
-```
+
+Pre-checkout handler: confirm checkout
+async def precheckout_callback(update: Update, context: CallbackContext):
+    query = update.pre_checkout_query
+[9/27, 22:52] ChatGPT: # Always approve pre-checkout query for now
+    await query.answer(ok=True)
+
+Successful payment handler
+async def successful_payment_callback(update: Update, context: CallbackContext):
+    user = update.effective_user
+    # Mark user as premium in your DB here
+    # Example: context.bot_data['db'].set_premium(user.id, True)
+
+    await update.message.reply_text(
+        f"Thank you for your payment, {user.first_name}! Your ZyraXis Premium subscription is now active."
+    )
+
+Handlers grouped to export
+payment_handler = [
+    CommandHandler("premium", start_premium),
+    PreCheckoutQueryHandler(precheckout_callback),
+    MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment_callback)
+]
