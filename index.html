@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ZyraXis Vault</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header><img id="logo" src="assets/botpic.png" alt="logo" /><h1>ZyraXis Vault</h1></header>
+    <main>
+      <section id="history"><h2>Chat History</h2><div id="historyList">Loading...</div></section>
+      <section id="images"><h2>Images</h2><div id="imagesList">Loading...</div></section>
+    </main>
+    <footer>
+      <button id="profileBtn">Profile</button>
+    </footer>
+  </div>
+
+  <div id="profileModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Profile</h3>
+      <div id="profileInfo"></div>
+      <button id="upgrade">Upgrade (300 Stars)</button>
+      <button id="delete">Delete Account</button>
+      <button id="closeProfile">Close</button>
+    </div>
+  </div>
+
+<script src="js/main.js"></script>
+</body>
+</html>
